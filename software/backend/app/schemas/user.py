@@ -1,9 +1,10 @@
 from pydantic import BaseModel, EmailStr, validator
+from uuid import UUID
 
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
-    phone_number: str  # Keep as str to preserve leading 0 if any
+    phone_number: str
     password: str
 
     @validator('phone_number')
@@ -15,10 +16,10 @@ class UserCreate(BaseModel):
         return v
 
 class UserOut(BaseModel):
-    id: int
+    public_id: UUID
     name: str
     email: EmailStr
-    phone_number: str  # Display it with +91 added in the UI, not in DB
+    phone_number: str
     role: str
     is_active: bool
 
