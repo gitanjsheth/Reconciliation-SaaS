@@ -1,3 +1,4 @@
+# scripts/init_db.py
 import sys
 import os
 

@@ -1,12 +1,14 @@
+# app/api/auth.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
 from app.models.user import User
-from app.utils.auth import verify_password, create_access_token, get_current_user
+from app.utils.auth import verify_password, create_access_token
 from app.db.database import get_db
+from app.core.config import settings
+from datetime import timedelta
 
 router = APIRouter(
-    prefix="/auth",
     tags=["Auth"]
 )
 
@@ -15,19 +17,16 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     user = db.query(User).filter(User.email == form_data.username).first()
     
     if not user:
-        raise HTTPException(status_code=400, detail="Invalid credentials")
-    
-    if not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Invalid credentials")
-    
-    access_token = create_access_token(data={"sub": str(user.id)})
-    
-    return {"access_token": access_token, "token_type": "bearer"}
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")   
 
-@router.get("/users/me")
-def read_users_me(current_user: User = Depends(get_current_user)):
-        return {
-        "id": current_user.id,
-        "email": current_user.email,
-        "role": current_user.role
-    }
+    if not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    access_token = create_access_token(
+        data={"sub": str(user.id)},  # user.id (internal id for token payload)
+        expires_delta=access_token_expires
+    )    
+
+    return {"access_token": access_token, "token_type": "bearer"}

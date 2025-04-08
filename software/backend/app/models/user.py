@@ -1,3 +1,4 @@
+# app/models/user.py
 import uuid
 from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.dialects.postgresql import UUID
